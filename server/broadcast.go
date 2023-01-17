@@ -22,6 +22,7 @@ import (
 	"github.com/livepeer/go-livepeer/clog"
 	"github.com/livepeer/go-livepeer/common"
 	"github.com/livepeer/go-livepeer/core"
+	lperrors "github.com/livepeer/go-livepeer/errors"
 	"github.com/livepeer/go-livepeer/monitor"
 	"github.com/livepeer/go-livepeer/net"
 	"github.com/livepeer/go-livepeer/pm"
@@ -955,7 +956,7 @@ func processSegment(ctx context.Context, cxn *rtmpConnection, seg *stream.HLSSeg
 		}()
 	}
 	if len(attempts) == MaxAttempts && err != nil {
-		err = fmt.Errorf("Hit max transcode attempts: %w", err)
+		err = lperrors.NewMaxTranscodeAttemptsError(err)
 		if monitor.Enabled {
 			monitor.SegmentTranscodeFailed(ctx, monitor.SegmentTranscodeErrorMaxAttempts, nonce, seg.SeqNo, err, true)
 		}
@@ -1581,7 +1582,8 @@ func isNonRetryableError(err error) bool {
 			return true
 		}
 	}
-	if strings.HasPrefix(err.Error(), "Hit max transcode attempts:") {
+	tErr := &lperrors.MaxTranscodeAttemptsErr{}
+	if errors.As(err, &tErr) {
 		return true
 	}
 	return false

@@ -17,6 +17,7 @@ import (
 	"github.com/golang/protobuf/proto"
 	"github.com/livepeer/go-livepeer/common"
 	"github.com/livepeer/go-livepeer/core"
+	lperrors "github.com/livepeer/go-livepeer/errors"
 	"github.com/livepeer/go-livepeer/net"
 	"github.com/livepeer/go-livepeer/pm"
 	"github.com/livepeer/go-livepeer/verification"
@@ -836,7 +837,9 @@ func TestProcessSegment_MaxAttempts(t *testing.T) {
 	transcodeCalls = 0
 	_, err = processSegment(context.Background(), cxn, seg, nil)
 	assert.NotNil(err)
-	assert.Equal("Hit max transcode attempts: UnknownResponse", err.Error())
+	tErr := &lperrors.MaxTranscodeAttemptsErr{}
+	assert.True(errors.As(err, &tErr))
+	assert.Equal("hit max transcode attempts: UnknownResponse", err.Error())
 	assert.Equal(1, transcodeCalls, "Segment submission calls did not match")
 	assert.Len(bsm.trustedPool.sessMap, 1)
 
