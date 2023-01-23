@@ -956,7 +956,7 @@ func processSegment(ctx context.Context, cxn *rtmpConnection, seg *stream.HLSSeg
 		}()
 	}
 	if len(attempts) == MaxAttempts && err != nil {
-		err = lperrors.NewMaxTranscodeAttemptsError(err)
+		err = lperrors.LpError(lperrors.MaxTranscodeAttempts, err)
 		if monitor.Enabled {
 			monitor.SegmentTranscodeFailed(ctx, monitor.SegmentTranscodeErrorMaxAttempts, nonce, seg.SeqNo, err, true)
 		}
@@ -1582,8 +1582,7 @@ func isNonRetryableError(err error) bool {
 			return true
 		}
 	}
-	tErr := &lperrors.MaxTranscodeAttemptsErr{}
-	if errors.As(err, &tErr) {
+	if errors.Is(err, lperrors.MaxTranscodeAttempts) {
 		return true
 	}
 	return false

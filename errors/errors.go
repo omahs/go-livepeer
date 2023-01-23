@@ -1,21 +1,28 @@
 package errors
 
-import "fmt"
+import (
+	"errors"
+	"fmt"
+)
 
-func NewMaxTranscodeAttemptsError(cause error) error {
-	return &MaxTranscodeAttemptsErr{
-		cause: cause,
+func LpError(customErr, cause error) error {
+	return &LPError{
+		cause:     cause,
+		customErr: customErr,
 	}
 }
 
-type MaxTranscodeAttemptsErr struct {
-	cause error
+type LPError struct {
+	cause     error
+	customErr error
 }
 
-func (e *MaxTranscodeAttemptsErr) Error() string {
-	return fmt.Sprintf("hit max transcode attempts: %s", e.cause.Error())
+var MaxTranscodeAttempts = errors.New("hit max transcode attempts")
+
+func (e *LPError) Error() string {
+	return fmt.Sprintf("%s: %s", e.customErr.Error(), e.cause.Error())
 }
 
-func (e *MaxTranscodeAttemptsErr) Unwrap() error {
-	return e.cause
+func (e *LPError) Is(err error) bool {
+	return errors.Is(err, e.cause) || errors.Is(err, e.customErr)
 }
